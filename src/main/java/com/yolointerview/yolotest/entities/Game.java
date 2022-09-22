@@ -4,6 +4,7 @@ import lombok.Getter;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.UUID;
 
 @Getter
 public class Game {
@@ -15,6 +16,12 @@ public class Game {
     private final Date createdAt;
     private Date endedAt;
     private boolean active;
+
+    public Game() {
+        this.id = UUID.randomUUID().toString();
+        this.players = new HashMap<>();
+        this.createdAt = new Date();
+    }
 
     public Game(String id) {
         this.id = id;

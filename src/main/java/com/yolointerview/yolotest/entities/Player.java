@@ -10,17 +10,25 @@ import java.util.UUID;
 @Getter
 public class Player {
     private final String id;
-    private final String nickname;
-    private final int guessedNumber;
+    private String nickname;
+    private int guessedNumber;
     private StakeStatus stakeStatus;
-    private final BigDecimal stakeAmount;
+    private BigDecimal stakeAmount;
     private BigDecimal endOfGameBalance = BigDecimal.ZERO;
 
-    public Player(PlaceBetDto placeBetDto) {
+    public Player() {
         this.id = UUID.randomUUID().toString();
-        this.nickname = placeBetDto.getNickname();
-        this.stakeAmount = placeBetDto.getStake();
-        this.guessedNumber = placeBetDto.getNumber();
+        this.nickname = null;
+        this.guessedNumber = 0;
+        this.stakeAmount = null;
+    }
+
+    public static Player newInstance(PlaceBetDto placeBetDto) {
+        Player player = new Player();
+        player.nickname = placeBetDto.getNickname();
+        player.stakeAmount = placeBetDto.getStake();
+        player.guessedNumber = placeBetDto.getNumber();
+        return player;
     }
 
     public void setStakeStatus(StakeStatus stakeStatus) {

@@ -36,7 +36,7 @@ public class GameServiceImpl implements GameService {
         if (!game.isActive()) throw new GameTimedOutException();
 
         // add a new player to the game session
-        Player newPlayer = new Player(placeBetDto);
+        Player newPlayer = Player.newInstance(placeBetDto);
         HashMap<String, Player> playerHashMap = game.getPlayers();
         playerHashMap.put(newPlayer.getId(), newPlayer);
     }

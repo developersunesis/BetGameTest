@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static com.yolointerview.yolotest.PlaceBetDtoUtils.placeBetDto;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -32,15 +33,10 @@ public class GameServiceTests {
         gameService = spy(new GameServiceImpl());
     }
 
-    private PlaceBetDto placeBetDto(String gameId) {
-        return PlaceBetDto.builder().gameId(gameId).nickname("emmanuel")
-                .number(5).stake(BigDecimal.TEN).build();
-    }
-
     private String startRandomGame() throws DuplicateGameIdException {
-        String gameId = UUID.randomUUID().toString();
-        gameService.startNewGame(new Game(gameId));
-        return gameId;
+        Game game = new Game();
+        gameService.startNewGame(game);
+        return game.getId();
     }
 
     @Test
