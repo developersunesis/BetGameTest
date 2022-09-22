@@ -2,6 +2,7 @@ package com.yolointerview.yolotest.units;
 
 import com.yolointerview.yolotest.PlaceBetDto;
 import com.yolointerview.yolotest.entities.Game;
+import com.yolointerview.yolotest.exceptions.DuplicateGameIdException;
 import com.yolointerview.yolotest.exceptions.GameDoesNotExistException;
 import com.yolointerview.yolotest.service.GameServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,12 +34,13 @@ public class GameServiceTests {
 
     @Test
     @DisplayName("Add or start a new game session")
-    public void addNewGame(){
+    public void addNewGameAndCheckItExists() throws DuplicateGameIdException {
         String gameId = UUID.randomUUID().toString();
 
         // start the new game
         Game runningGame = gameService.startNewGame(new Game(gameId));
 
+        assertNotNull(runningGame);
         assertTrue(gameService.isGameAvailable(gameId));
         assertNotNull(runningGame.getPlayers());
         assertTrue(runningGame.getPlayers().isEmpty());
