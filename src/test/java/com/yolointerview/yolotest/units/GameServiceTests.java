@@ -1,6 +1,6 @@
 package com.yolointerview.yolotest.units;
 
-import com.yolointerview.yolotest.PlaceBetDto;
+import com.yolointerview.yolotest.dtos.PlaceBetDto;
 import com.yolointerview.yolotest.entities.Game;
 import com.yolointerview.yolotest.entities.Player;
 import com.yolointerview.yolotest.enums.StakeStatus;
@@ -14,7 +14,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -53,7 +52,7 @@ public class GameServiceTests {
     }
 
     @Test
-    @DisplayName("Add or start a new game session")
+    @DisplayName("Successfully add or start a new game session")
     public void addNewGameAndCheckItExists() throws DuplicateGameIdException {
         // start the new game
         String gameId = UUID.randomUUID().toString();
@@ -73,7 +72,7 @@ public class GameServiceTests {
         // prepare mock instance for expired game
         String gameId = UUID.randomUUID().toString();
         Game game = spy(new Game(gameId));
-        when(game.getTimeout()).thenReturn(LocalDateTime.now().minusSeconds(5));
+        when(game.isActive()).thenReturn(false);
 
         // start a new game
         gameService.startNewGame(game);
@@ -83,7 +82,7 @@ public class GameServiceTests {
     }
 
     @Test
-    @DisplayName("Player successfully places a bet in an active game session")
+    @DisplayName("When player successfully places a bet in an active game session")
     public void playerSuccessfullyPlacesABet() throws DuplicateGameIdException, GameDoesNotExistException {
         // start the new game
         String gameId = startRandomGame();
@@ -114,6 +113,7 @@ public class GameServiceTests {
         Game endedGame = gameService.endGame(gameId);
         assertNotNull(endedGame);
         assertFalse(endedGame.isActive());
+        assertNotNull(endedGame.getEndedAt());
 
         Integer correctNumber = endedGame.getCorrectNumber();
         assertNotNull(correctNumber);

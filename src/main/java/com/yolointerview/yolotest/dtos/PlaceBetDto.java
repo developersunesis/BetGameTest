@@ -1,4 +1,4 @@
-package com.yolointerview.yolotest;
+package com.yolointerview.yolotest.dtos;
 
 import lombok.Builder;
 import lombok.Getter;

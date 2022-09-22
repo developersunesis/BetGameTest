@@ -1,6 +1,6 @@
 package com.yolointerview.yolotest.entities;
 
-import com.yolointerview.yolotest.PlaceBetDto;
+import com.yolointerview.yolotest.dtos.PlaceBetDto;
 import com.yolointerview.yolotest.enums.StakeStatus;
 import lombok.Getter;
 

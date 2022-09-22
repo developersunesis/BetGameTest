@@ -1,10 +1,12 @@
 package com.yolointerview.yolotest.service;
 
-import com.yolointerview.yolotest.PlaceBetDto;
+import com.yolointerview.yolotest.dtos.PlaceBetDto;
 import com.yolointerview.yolotest.entities.Game;
 import com.yolointerview.yolotest.exceptions.DuplicateGameIdException;
 import com.yolointerview.yolotest.exceptions.GameDoesNotExistException;
 import com.yolointerview.yolotest.exceptions.GameTimedOutException;
+
+import java.util.concurrent.ConcurrentHashMap;
 
 public interface GameService {
     void placeBet(PlaceBetDto placeBetDto);
@@ -18,4 +20,6 @@ public interface GameService {
     Game endGame(String id) throws GameDoesNotExistException, GameTimedOutException;
 
     int generateRandomNumber();
+
+    ConcurrentHashMap<String, Game> getGames();
 }

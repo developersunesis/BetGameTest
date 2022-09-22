@@ -2,7 +2,7 @@ package com.yolointerview.yolotest.entities;
 
 import lombok.Getter;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashMap;
 
 @Getter
@@ -11,13 +11,15 @@ public class Game {
     private Integer correctNumber;
     private final HashMap<String, Player> players;
     private final double winningFactor = 9.9;
-    private final LocalDateTime timeout;
+    private final long timeout = 10_000;
+    private final Date createdAt;
+    private Date endedAt;
     private boolean active;
 
     public Game(String id) {
         this.id = id;
         this.players = new HashMap<>();
-        this.timeout = LocalDateTime.now().plusSeconds(10);
+        this.createdAt = new Date();
     }
 
     public void setCorrectNumber(Integer correctNumber) {
@@ -30,5 +32,9 @@ public class Game {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public void setEndedAt(Date endedAt) {
+        this.endedAt = endedAt;
     }
 }

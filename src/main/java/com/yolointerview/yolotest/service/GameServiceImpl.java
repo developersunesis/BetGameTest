@@ -1,6 +1,6 @@
 package com.yolointerview.yolotest.service;
 
-import com.yolointerview.yolotest.PlaceBetDto;
+import com.yolointerview.yolotest.dtos.PlaceBetDto;
 import com.yolointerview.yolotest.entities.Game;
 import com.yolointerview.yolotest.entities.Player;
 import com.yolointerview.yolotest.enums.StakeStatus;
@@ -11,7 +11,7 @@ import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.Random;
@@ -33,7 +33,7 @@ public class GameServiceImpl implements GameService {
         String gameId = placeBetDto.getGameId();
         Game game = getGameById(gameId);
 
-        if (isGameTimedOut(game)) throw new GameTimedOutException();
+        if (!game.isActive()) throw new GameTimedOutException();
 
         // add a new player to the game session
         Player newPlayer = new Player(placeBetDto);
@@ -76,6 +76,7 @@ public class GameServiceImpl implements GameService {
         // generate a random number as correct number for the game
         int serverGeneratedRandomNumber = generateRandomNumber();
         game.setCorrectNumber(serverGeneratedRandomNumber);
+        game.setEndedAt(new Date());
         game.setActive(false);
 
         // reward every user accordingly after ended game
@@ -102,15 +103,7 @@ public class GameServiceImpl implements GameService {
         return new Random().nextInt(0, 10);
     }
 
-    /**
-     * Validate that a game is not yet timed out by comparing with the current date time
-     * from LocalDateTime.now()
-     *
-     * @param game A Game instance
-     * @return Returns false if the game is timed out
-     */
-    private boolean isGameTimedOut(Game game) {
-        LocalDateTime timeout = game.getTimeout();
-        return !game.isActive() || timeout.isBefore(LocalDateTime.now());
+    public ConcurrentHashMap<String, Game> getGames() {
+        return games;
     }
 }
