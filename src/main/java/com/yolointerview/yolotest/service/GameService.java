@@ -14,5 +14,5 @@ public interface GameService {
 
     Game getGameById(String id) throws GameDoesNotExistException;
 
-    boolean isGameTimedOut(Game game);
+    Game endGame(Game game);
 }

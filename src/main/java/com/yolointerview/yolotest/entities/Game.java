@@ -1,14 +1,11 @@
 package com.yolointerview.yolotest.entities;
 
 import lombok.Getter;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.HashMap;
 
 @Getter
-@Setter
 public class Game {
     private final String id;
     private Integer correctNumber;
@@ -21,7 +18,7 @@ public class Game {
         this.timeout = LocalDateTime.now().plusSeconds(10);
     }
 
-    private Date setTimeout(){
-        throw new UnsupportedOperationException();
+    public void setCorrectNumber(Integer correctNumber) {
+        this.correctNumber = correctNumber;
     }
 }

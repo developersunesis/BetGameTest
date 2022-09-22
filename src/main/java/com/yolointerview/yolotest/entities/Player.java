@@ -1,17 +1,33 @@
 package com.yolointerview.yolotest.entities;
 
+import com.yolointerview.yolotest.PlaceBetDto;
 import com.yolointerview.yolotest.enums.StakeStatus;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Getter
-@Setter
 public class Player {
-    private String id;
-    private String nickname;
+    private final String id;
+    private final String nickname;
+    private final int guessedNumber;
     private StakeStatus stakeStatus;
-    private BigDecimal stakeAmount = BigDecimal.ZERO;
+    private final BigDecimal stakeAmount;
     private BigDecimal endOfGameBalance = BigDecimal.ZERO;
+
+    public Player(PlaceBetDto placeBetDto) {
+        this.id = UUID.randomUUID().toString();
+        this.nickname = placeBetDto.getNickname();
+        this.stakeAmount = placeBetDto.getStake();
+        this.guessedNumber = placeBetDto.getNumber();
+    }
+
+    public void setStakeStatus(StakeStatus stakeStatus) {
+        this.stakeStatus = stakeStatus;
+    }
+
+    public void setEndOfGameBalance(BigDecimal endOfGameBalance) {
+        this.endOfGameBalance = endOfGameBalance;
+    }
 }
