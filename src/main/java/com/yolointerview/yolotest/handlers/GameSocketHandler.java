@@ -10,12 +10,14 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -27,12 +29,14 @@ import static com.yolointerview.yolotest.enums.MessageType.*;
 @Component
 public class GameSocketHandler extends TextWebSocketHandler {
 
+    private final HashMap<String, WebSocketSession> activeSessions;
     private final GameService gameService;
     private final ScheduledThreadPoolExecutor scheduledThreadPoolExecutor;
     private Game currentGame;
 
     public GameSocketHandler(GameService gameService) {
         this.scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(2);
+        this.activeSessions = new HashMap<>();
         this.gameService = gameService;
         startNewGame();
     }
@@ -42,20 +46,32 @@ public class GameSocketHandler extends TextWebSocketHandler {
         String id = UUID.randomUUID().toString();
         currentGame = new Game(id);
         currentGame = gameService.startNewGame(currentGame);
-
-        // end the current game and start a new one after timeout
-        long timeout = currentGame.getTimeout();
-        scheduledThreadPoolExecutor.schedule(this::endCurrentGame, timeout, TimeUnit.SECONDS);
-        scheduledThreadPoolExecutor.schedule(this::startNewGame, timeout, TimeUnit.SECONDS);
-
         log.info("New Game Started {{}}", id);
+
+        // end the current game and start a new one after scheduled timeout
+        long timeout = currentGame.getTimeout();
+        scheduledThreadPoolExecutor.schedule(this::endCurrentGame, timeout, TimeUnit.MILLISECONDS);
     }
 
     @SneakyThrows
     private void endCurrentGame() {
         String id = currentGame.getId();
-
+        Game endedGame = gameService.endGame(id);
         log.info("Ended Current Game {{}}", id);
+
+        // send concluded game to all active session and players
+        MessageDto<Game> responseMessageDto = new MessageDto<>(TIMED_OUT);
+        responseMessageDto.setData(endedGame);
+        activeSessions.forEach((s, webSocketSession) -> {
+            try {
+                webSocketSession.sendMessage(responseMessageDto.asTextMessage());
+            } catch (IOException e) {
+                log.error("Error sending message to Socket {} due to {}", webSocketSession.getId(), e.getMessage());
+            }
+        });
+
+        // start a new game (repeat the game process)
+        startNewGame();
     }
 
     @Override
@@ -67,6 +83,19 @@ public class GameSocketHandler extends TextWebSocketHandler {
             case PLACE_BET -> sendResponseAfterPlacingBet(session, payload);
             default -> sendErrorResponse(session, "Unable to parse request type");
         }
+    }
+
+    @Override
+    public void afterConnectionEstablished(WebSocketSession session) {
+        // when a new session is established, add to the list of active sessions
+        String sessionId = session.getId();
+        activeSessions.put(sessionId, session);
+    }
+
+    @Override
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+        // when a session is closed, remove the session from list of active sessions
+        activeSessions.remove(session.getId());
     }
 
     private void sendResponseToPing(WebSocketSession session) throws IOException {

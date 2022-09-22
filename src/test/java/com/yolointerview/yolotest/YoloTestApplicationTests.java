@@ -5,41 +5,49 @@ import com.yolointerview.yolotest.dtos.MessageDtoConverter;
 import com.yolointerview.yolotest.dtos.PlaceBetDto;
 import com.yolointerview.yolotest.entities.Game;
 import com.yolointerview.yolotest.entities.Player;
+import com.yolointerview.yolotest.enums.StakeStatus;
 import com.yolointerview.yolotest.handlers.GameSocketHandler;
 import com.yolointerview.yolotest.service.GameService;
 import com.yolointerview.yolotest.service.GameServiceImpl;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import static com.yolointerview.yolotest.PlaceBetDtoUtils.placeBetDto;
 import static com.yolointerview.yolotest.enums.MessageType.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.*;
 
 class YoloTestApplicationTests {
 
     private static final GameService gameService = spy(new GameServiceImpl());
     private static final int MOCK_CLIENT_SIZE = 5;
     private static final TestClientWebSocket[] testClientWebSockets = new TestClientWebSocket[MOCK_CLIENT_SIZE];
-    private static GameSocketHandler gameSocketHandler;
+    private GameSocketHandler gameSocketHandler;
 
     @BeforeAll
     public static void initDeps() {
-        gameSocketHandler = new GameSocketHandler(gameService);
-
         // create MOCK_CLIENT_SIZE amount of mock sockets
         for (int i = 0; i < MOCK_CLIENT_SIZE; i++) {
             testClientWebSockets[i] = new TestClientWebSocket(mock(WebSocketSession.class));
         }
+    }
+
+    @BeforeEach
+    public void instantiateGameSocketHandler() {
+        gameSocketHandler = new GameSocketHandler(gameService);
     }
 
     @Test
@@ -54,7 +62,8 @@ class YoloTestApplicationTests {
 
         // a ping response is received
         String payload = textMessages.get(0).getPayload();
-        MessageDto<ConcurrentHashMap<String, Game>> responseMessage = MessageDtoConverter.convertToMessageDto(payload);
+        MessageDto<ConcurrentHashMap<String, Game>> responseMessage = MessageDtoConverter.convertToMessageDto(payload,
+                ConcurrentHashMap.class);
         assertEquals(PING, responseMessage.getType());
 
         // response contains list of all games
@@ -144,5 +153,82 @@ class YoloTestApplicationTests {
         assertNull(player.getStakeStatus());
         assertEquals(placeBetDto.getNickname(), player.getNickname());
         assertEquals(BigDecimal.ZERO, player.getEndOfGameBalance());
+    }
+
+    @Test
+    @DisplayName("Given there's an active game and 5 players places bet successfully, " +
+            "send game feedback to all players when game ends")
+    void fivePlayerSuccessfullyPlacesBetForActiveGameAndGotFeedback() throws Exception {
+        // clear messages for all clients
+        for (TestClientWebSocket testClientWebSocket : testClientWebSockets) {
+            testClientWebSocket.clearMessages();
+        }
+
+        Game currentGame = gameSocketHandler.getCurrentGame();
+        String currentGameId = currentGame.getId();
+
+        String[] players = {"bob", "joe", "mean", "alice", "sandra"};
+        int[] playersNumbers = {3, 4, 2, 1, 8};
+
+        // establish all players connection and submit all players bets
+        TestClientWebSocket testClientWebSocket = null;
+        MessageDto<PlaceBetDto> messageDto = new MessageDto<>(PLACE_BET);
+        for (int i = 0; i < testClientWebSockets.length; i++) {
+            testClientWebSocket = testClientWebSockets[i];
+            PlaceBetDto placeBetDto = placeBetDto(currentGameId, players[i], playersNumbers[i]);
+            messageDto.setData(placeBetDto);
+            gameSocketHandler.afterConnectionEstablished(testClientWebSocket);
+            gameSocketHandler.handleMessage(testClientWebSocket, messageDto.asTextMessage());
+        }
+
+        // check that the websocket it not null
+        assertNotNull(testClientWebSocket);
+
+        // get last payload response to the last client for validation
+        String payload = testClientWebSocket.getMessages().get(0).getPayload();
+        MessageDto<Game> gameMessageDto = MessageDtoConverter.convertToMessageDto(payload, Game.class);
+        Game game = gameMessageDto.getData();
+        assertEquals(PLACE_BET, gameMessageDto.getType());
+        assertEquals(currentGameId, game.getId());
+        assertFalse(game.getPlayers().isEmpty());
+        assertEquals(5, game.getPlayers().size());
+
+        // mock the game and assign a known number for winning
+        // at the end of the game, alice is meant to be the standing winner
+        when(gameService.generateRandomNumber()).thenReturn(1);
+
+        // use a schedule thread pool to wait for the game to end and check the last message sent to all
+        // client websocket
+        ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1);
+        scheduledThreadPoolExecutor.schedule(() -> {
+            Game lastGame = null;
+            for (TestClientWebSocket clientWebSocket : testClientWebSockets) {
+                ArrayList<TextMessage> messages = clientWebSocket.getMessages();
+                String lastPayload = messages.get(messages.size() - 1).getPayload();
+                MessageDto<Game> lastMessageDto = MessageDtoConverter.convertToMessageDto(lastPayload, Game.class);
+                lastGame = lastMessageDto.getData();
+                assertEquals(TIMED_OUT, lastMessageDto.getType());
+                assertFalse(lastGame.isActive());
+            }
+
+            // the mocked correct number of current game
+            assertEquals(1, lastGame.getCorrectNumber());
+
+            List<Player> playerList = lastGame.getPlayers().values().stream().toList();
+            // 4 losing players
+            assertEquals(4, playerList.stream().filter(player ->
+                    player.getStakeStatus() == StakeStatus.LOSS).count());
+
+            // 1 winning player: alice
+            List<Player> winningPlayers = playerList.stream().filter(player ->
+                    player.getStakeStatus() == StakeStatus.WIN).toList();
+            assertEquals(1, winningPlayers.size());
+
+            // player details matches: alice
+            Player player = winningPlayers.get(0);
+            BigDecimal expectedBalance = BigDecimal.valueOf(99).setScale(2, RoundingMode.UP);
+            assertEquals("alice", player.getNickname());
+            assertEquals(expectedBalance, player.getEndOfGameBalance());
+        }, currentGame.getTimeout(), TimeUnit.MILLISECONDS).get();
     }
 }

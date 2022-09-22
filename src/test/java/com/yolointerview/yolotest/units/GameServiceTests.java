@@ -14,6 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -45,6 +46,15 @@ public class GameServiceTests {
         String invalidGameId = UUID.randomUUID().toString();
         PlaceBetDto placeBetDto = placeBetDto(invalidGameId);
         assertThrows(GameDoesNotExistException.class, () -> gameService.placeBet(placeBetDto));
+    }
+
+    @Test
+    @DisplayName("Throws error when the game session requested is duplicate")
+    public void newlyRequestedGameIdSessionIsDuplicate() throws DuplicateGameIdException {
+        String gameId = UUID.randomUUID().toString();
+        Game game = new Game(gameId);
+        gameService.startNewGame(game);
+        assertThrows(DuplicateGameIdException.class, () -> gameService.startNewGame(new Game(gameId)));
     }
 
     @Test
@@ -137,7 +147,7 @@ public class GameServiceTests {
         gameService.placeBet(placeBetDto2);
         gameService.placeBet(placeBetDto3);
 
-        // mock the game and assign a know number for winning
+        // mock the game and assign a known number for winning
         when(gameService.generateRandomNumber()).thenReturn(correctGuessedNumber);
 
         Game endedGame = gameService.endGame(gameId);
@@ -163,7 +173,8 @@ public class GameServiceTests {
         assertEquals(1, numberOfWiningPlayer);
 
         // end of game balance is increased winning players (player2)
-        BigDecimal expectedEndBalance = player2Stake.multiply(BigDecimal.valueOf(9.9));
+        BigDecimal expectedEndBalance = player2Stake.multiply(BigDecimal.valueOf(9.9))
+                .setScale(2, RoundingMode.UP);
         Optional<Player> optionalPlayer2 = winingPlayers.stream().findFirst();
         assertTrue(optionalPlayer2.isPresent());
 

@@ -11,6 +11,7 @@ import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Objects;
@@ -88,6 +89,7 @@ public class GameServiceImpl implements GameService {
             if (guessedNumber == correctNumber) {
                 BigDecimal playerStake = player.getStakeAmount();
                 BigDecimal balance = gameWinningFactor.multiply(playerStake);
+                balance = balance.setScale(2, RoundingMode.UP);
                 player.setStakeStatus(StakeStatus.WIN);
                 player.setEndOfGameBalance(balance);
             } else {
