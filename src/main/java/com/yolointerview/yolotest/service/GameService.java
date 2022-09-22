@@ -4,6 +4,7 @@ import com.yolointerview.yolotest.PlaceBetDto;
 import com.yolointerview.yolotest.entities.Game;
 import com.yolointerview.yolotest.exceptions.DuplicateGameIdException;
 import com.yolointerview.yolotest.exceptions.GameDoesNotExistException;
+import com.yolointerview.yolotest.exceptions.GameTimedOutException;
 
 public interface GameService {
     void placeBet(PlaceBetDto placeBetDto);
@@ -14,5 +15,5 @@ public interface GameService {
 
     Game getGameById(String id) throws GameDoesNotExistException;
 
-    Game endGame(String id);
+    Game endGame(String id) throws GameDoesNotExistException, GameTimedOutException;
 }

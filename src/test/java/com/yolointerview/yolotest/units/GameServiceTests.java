@@ -56,6 +56,7 @@ public class GameServiceTests {
         assertNotNull(runningGame.getPlayers());
         assertTrue(runningGame.getPlayers().isEmpty());
         assertNull(runningGame.getCorrectNumber());
+        assertTrue(runningGame.isActive());
     }
 
     @Test

@@ -6,6 +6,7 @@ import com.yolointerview.yolotest.entities.Player;
 import com.yolointerview.yolotest.exceptions.DuplicateGameIdException;
 import com.yolointerview.yolotest.exceptions.GameDoesNotExistException;
 import com.yolointerview.yolotest.exceptions.GameTimedOutException;
+import com.yolointerview.yolotest.utils.RandomNumberGeneratorUtil;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 
@@ -52,6 +53,7 @@ public class GameServiceImpl implements GameService {
         if (isGameAvailable(gameId)) throw new DuplicateGameIdException();
 
         // add new game to existing collections of game
+        game.setActive(true);
         games.put(gameId, game);
         return game;
     }
@@ -63,8 +65,17 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public Game endGame(String id) {
-        return null;
+    public Game endGame(String id) throws GameDoesNotExistException, GameTimedOutException {
+        Game game = getGameById(id);
+
+        // if game is not active throw exception
+        if (!game.isActive()) throw new GameTimedOutException();
+
+        // generate a random number as correct number for the game
+        int serverGeneratedRandomNumber = RandomNumberGeneratorUtil.generateRandomNumber();
+        game.setCorrectNumber(serverGeneratedRandomNumber);
+        game.setActive(false);
+        return game;
     }
 
     /**
@@ -78,5 +89,4 @@ public class GameServiceImpl implements GameService {
         LocalDateTime timeout = game.getTimeout();
         return timeout.isBefore(LocalDateTime.now());
     }
-
 }
