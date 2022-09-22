@@ -4,9 +4,11 @@ import com.yolointerview.yolotest.PlaceBetDto;
 import com.yolointerview.yolotest.entities.Game;
 import com.yolointerview.yolotest.exceptions.DuplicateGameIdException;
 import com.yolointerview.yolotest.exceptions.GameDoesNotExistException;
+import com.yolointerview.yolotest.exceptions.GameTimedOutException;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -23,15 +25,15 @@ public class GameServiceImpl implements GameService {
     @Override
     @SneakyThrows
     public void placeBet(PlaceBetDto placeBetDto) {
-        if(isGameAvailable(placeBetDto.getGameId())){
+        String gameId = placeBetDto.getGameId();
+        Game game = getGameById(gameId);
 
-        }
-
-        throw new GameDoesNotExistException();
+        if (isGameTimedOut(game)) throw new GameTimedOutException();
     }
 
     @Override
     public boolean isGameAvailable(String id) {
+        if (id == null) throw new NullPointerException();
         return Objects.nonNull(games.get(id));
     }
 
@@ -47,5 +49,24 @@ public class GameServiceImpl implements GameService {
         return game;
     }
 
+    @Override
+    public Game getGameById(String id) throws GameDoesNotExistException {
+        if (!isGameAvailable(id)) throw new GameDoesNotExistException();
+        return games.get(id);
+    }
+
+
+    /**
+     * Validate that a game is not yet timed out by comparing with the current date time
+     * from LocalDateTime.now()
+     *
+     * @param game A Game instance
+     * @return Returns false if the game is timed out
+     */
+    @Override
+    public boolean isGameTimedOut(Game game) {
+        LocalDateTime timeout = game.getTimeout();
+        return timeout.isBefore(LocalDateTime.now());
+    }
 
 }

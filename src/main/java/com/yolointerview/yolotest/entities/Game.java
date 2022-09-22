@@ -1,25 +1,23 @@
 package com.yolointerview.yolotest.entities;
 
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
 
 @Getter
 @Setter
 public class Game {
     private final String id;
     private Integer correctNumber;
-    private final Set<Player> players;
+    private final HashMap<String, Player> players;
     private final LocalDateTime timeout;
 
     public Game(String id) {
         this.id = id;
-        this.players = new HashSet<>();
+        this.players = new HashMap<>();
         this.timeout = LocalDateTime.now().plusSeconds(10);
     }
 
