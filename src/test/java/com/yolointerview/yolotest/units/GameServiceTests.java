@@ -3,6 +3,7 @@ package com.yolointerview.yolotest.units;
 import com.yolointerview.yolotest.PlaceBetDto;
 import com.yolointerview.yolotest.entities.Game;
 import com.yolointerview.yolotest.entities.Player;
+import com.yolointerview.yolotest.enums.StakeStatus;
 import com.yolointerview.yolotest.exceptions.DuplicateGameIdException;
 import com.yolointerview.yolotest.exceptions.GameDoesNotExistException;
 import com.yolointerview.yolotest.exceptions.GameTimedOutException;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -28,12 +30,18 @@ public class GameServiceTests {
 
     @BeforeEach
     public void initGameService() {
-        gameService = new GameServiceImpl();
+        gameService = spy(new GameServiceImpl());
     }
 
     private PlaceBetDto placeBetDto(String gameId) {
         return PlaceBetDto.builder().gameId(gameId).nickname("emmanuel")
                 .number(5).stake(BigDecimal.TEN).build();
+    }
+
+    private String startRandomGame() throws DuplicateGameIdException {
+        String gameId = UUID.randomUUID().toString();
+        gameService.startNewGame(new Game(gameId));
+        return gameId;
     }
 
     @Test
@@ -78,8 +86,7 @@ public class GameServiceTests {
     @DisplayName("Player successfully places a bet in an active game session")
     public void playerSuccessfullyPlacesABet() throws DuplicateGameIdException, GameDoesNotExistException {
         // start the new game
-        String gameId = UUID.randomUUID().toString();
-        gameService.startNewGame(new Game(gameId));
+        String gameId = startRandomGame();
 
         PlaceBetDto placeBetDto = placeBetDto(gameId);
         gameService.placeBet(placeBetDto);
@@ -102,8 +109,7 @@ public class GameServiceTests {
     public void endGameSessionAndSetCorrectGameNumber() throws GameDoesNotExistException,
             GameTimedOutException, DuplicateGameIdException {
         // start the new game
-        String gameId = UUID.randomUUID().toString();
-        gameService.startNewGame(new Game(gameId));
+        String gameId = startRandomGame();
 
         Game endedGame = gameService.endGame(gameId);
         assertNotNull(endedGame);
@@ -111,5 +117,60 @@ public class GameServiceTests {
 
         Integer correctNumber = endedGame.getCorrectNumber();
         assertNotNull(correctNumber);
+    }
+
+    @Test
+    @DisplayName("When game is successfully ended, players bet should be updated and rewarded accordingly")
+    public void endGameSessionAndUpdatePlayersBet() throws GameDoesNotExistException,
+            GameTimedOutException, DuplicateGameIdException {
+        // start the new game
+        String gameId = startRandomGame();
+
+        // create mock bets
+        PlaceBetDto placeBetDto = spy(placeBetDto(gameId));
+        PlaceBetDto placeBetDto2 = spy(placeBetDto(gameId));
+        PlaceBetDto placeBetDto3 = spy(placeBetDto(gameId));
+
+        // place all mock bets
+        gameService.placeBet(placeBetDto);
+        gameService.placeBet(placeBetDto2);
+        gameService.placeBet(placeBetDto3);
+
+        int correctGuessedNumber = 4;
+        BigDecimal player2Stake = placeBetDto2.getStake();
+        when(placeBetDto2.getNumber()).thenReturn(correctGuessedNumber);
+
+        Game mockedGame = spy(gameService.getGameById(gameId));
+        when(mockedGame.getCorrectNumber()).thenReturn(correctGuessedNumber);
+        when(gameService.getGameById(gameId)).thenReturn(mockedGame);
+
+        Game endedGame = gameService.endGame(gameId);
+        assertFalse(endedGame.isActive());
+        assertNotNull(endedGame.getCorrectNumber());
+        assertEquals(correctGuessedNumber, endedGame.getCorrectNumber());
+
+        HashMap<String, Player> playerHashMap = endedGame.getPlayers();
+        assertFalse(playerHashMap.isEmpty());
+        assertEquals(3, playerHashMap.size());
+
+        // obtain number of losing players after ended game
+        long numberOfLosingPlayer = playerHashMap.values().stream()
+                .filter(player -> player.getStakeStatus() != null && player.getStakeStatus().equals(StakeStatus.LOSS))
+                .count();
+        assertEquals(2, numberOfLosingPlayer);
+
+        // obtain number of winning players
+        List<Player> winingPlayers = playerHashMap.values().stream()
+                .filter(player -> player.getStakeStatus() != null && player.getStakeStatus().equals(StakeStatus.WIN))
+                .toList();
+        long numberOfWiningPlayer = winingPlayers.size();
+        assertEquals(1, numberOfWiningPlayer);
+
+        // end of game balance is increased winning players (player2)
+        BigDecimal expectedEndBalance = player2Stake.multiply(BigDecimal.valueOf(9.9));
+        Optional<Player> optionalPlayer2 = winingPlayers.stream().findFirst();
+        assertTrue(optionalPlayer2.isPresent());
+        BigDecimal player2EndBalance = winingPlayers.stream().findFirst().get().getEndOfGameBalance();
+        assertEquals(expectedEndBalance, player2EndBalance);
     }
 }
