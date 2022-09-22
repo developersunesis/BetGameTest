@@ -14,5 +14,5 @@ public interface GameService {
 
     Game getGameById(String id) throws GameDoesNotExistException;
 
-    Game endGame(Game game);
+    Game endGame(String id);
 }

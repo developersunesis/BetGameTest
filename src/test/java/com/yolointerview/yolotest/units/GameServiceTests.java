@@ -95,4 +95,20 @@ public class GameServiceTests {
         assertEquals(player.getStakeAmount(), BigDecimal.TEN);
         assertNull(player.getStakeStatus());
     }
+
+    @Test
+    @DisplayName("When game is successfully ended, set the correct guess number for the game")
+    public void endGameSessionAndSetCorrectGameNumber() throws GameDoesNotExistException,
+            GameTimedOutException, DuplicateGameIdException {
+        // start the new game
+        String gameId = UUID.randomUUID().toString();
+        gameService.startNewGame(new Game(gameId));
+
+        Game endedGame = gameService.endGame(gameId);
+        assertNotNull(endedGame);
+        assertFalse(endedGame.isActive());
+
+        Integer correctNumber = endedGame.getCorrectNumber();
+        assertNotNull(correctNumber);
+    }
 }

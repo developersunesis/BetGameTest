@@ -63,7 +63,7 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public Game endGame(Game game) {
+    public Game endGame(String id) {
         return null;
     }
 
