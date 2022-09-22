@@ -131,18 +131,18 @@ public class GameServiceTests {
         PlaceBetDto placeBetDto2 = spy(placeBetDto(gameId));
         PlaceBetDto placeBetDto3 = spy(placeBetDto(gameId));
 
+        // mock player2 as the winner
+        int correctGuessedNumber = 4;
+        BigDecimal player2Stake = placeBetDto2.getStake();
+        when(placeBetDto2.getNumber()).thenReturn(correctGuessedNumber);
+
         // place all mock bets
         gameService.placeBet(placeBetDto);
         gameService.placeBet(placeBetDto2);
         gameService.placeBet(placeBetDto3);
 
-        int correctGuessedNumber = 4;
-        BigDecimal player2Stake = placeBetDto2.getStake();
-        when(placeBetDto2.getNumber()).thenReturn(correctGuessedNumber);
-
-        Game mockedGame = spy(gameService.getGameById(gameId));
-        when(mockedGame.getCorrectNumber()).thenReturn(correctGuessedNumber);
-        when(gameService.getGameById(gameId)).thenReturn(mockedGame);
+        // mock the game and assign a know number for winning
+        when(gameService.generateRandomNumber()).thenReturn(correctGuessedNumber);
 
         Game endedGame = gameService.endGame(gameId);
         assertFalse(endedGame.isActive());
@@ -170,6 +170,8 @@ public class GameServiceTests {
         BigDecimal expectedEndBalance = player2Stake.multiply(BigDecimal.valueOf(9.9));
         Optional<Player> optionalPlayer2 = winingPlayers.stream().findFirst();
         assertTrue(optionalPlayer2.isPresent());
+
+        // assert player 2 gets their balance as expected
         BigDecimal player2EndBalance = winingPlayers.stream().findFirst().get().getEndOfGameBalance();
         assertEquals(expectedEndBalance, player2EndBalance);
     }

@@ -3,16 +3,18 @@ package com.yolointerview.yolotest.service;
 import com.yolointerview.yolotest.PlaceBetDto;
 import com.yolointerview.yolotest.entities.Game;
 import com.yolointerview.yolotest.entities.Player;
+import com.yolointerview.yolotest.enums.StakeStatus;
 import com.yolointerview.yolotest.exceptions.DuplicateGameIdException;
 import com.yolointerview.yolotest.exceptions.GameDoesNotExistException;
 import com.yolointerview.yolotest.exceptions.GameTimedOutException;
-import com.yolointerview.yolotest.utils.RandomNumberGeneratorUtil;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
@@ -72,10 +74,32 @@ public class GameServiceImpl implements GameService {
         if (!game.isActive()) throw new GameTimedOutException();
 
         // generate a random number as correct number for the game
-        int serverGeneratedRandomNumber = RandomNumberGeneratorUtil.generateRandomNumber();
+        int serverGeneratedRandomNumber = generateRandomNumber();
         game.setCorrectNumber(serverGeneratedRandomNumber);
         game.setActive(false);
+
+        // reward every user accordingly after ended game
+        BigDecimal gameWinningFactor = BigDecimal.valueOf(game.getWinningFactor());
+        HashMap<String, Player> playerHashMap = game.getPlayers();
+        playerHashMap.forEach((s, player) -> {
+            int correctNumber = game.getCorrectNumber();
+            int guessedNumber = player.getGuessedNumber();
+            if (guessedNumber == correctNumber) {
+                BigDecimal playerStake = player.getStakeAmount();
+                BigDecimal balance = gameWinningFactor.multiply(playerStake);
+                player.setStakeStatus(StakeStatus.WIN);
+                player.setEndOfGameBalance(balance);
+            } else {
+                player.setStakeStatus(StakeStatus.LOSS);
+            }
+        });
+
         return game;
+    }
+
+    @Override
+    public int generateRandomNumber() {
+        return new Random().nextInt(0, 10);
     }
 
     /**
@@ -87,6 +111,6 @@ public class GameServiceImpl implements GameService {
      */
     private boolean isGameTimedOut(Game game) {
         LocalDateTime timeout = game.getTimeout();
-        return timeout.isBefore(LocalDateTime.now());
+        return !game.isActive() || timeout.isBefore(LocalDateTime.now());
     }
 }

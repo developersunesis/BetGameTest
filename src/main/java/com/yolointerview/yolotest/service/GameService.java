@@ -16,4 +16,6 @@ public interface GameService {
     Game getGameById(String id) throws GameDoesNotExistException;
 
     Game endGame(String id) throws GameDoesNotExistException, GameTimedOutException;
+
+    int generateRandomNumber();
 }

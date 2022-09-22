@@ -1,11 +1,11 @@
 package com.yolointerview.yolotest;
 
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 
 import java.math.BigDecimal;
 
-@Data
+@Getter
 @Builder
 public class PlaceBetDto {
     private String gameId;
