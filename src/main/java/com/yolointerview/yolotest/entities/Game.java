@@ -1,5 +1,6 @@
 package com.yolointerview.yolotest.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 
 import java.util.Date;
@@ -7,6 +8,7 @@ import java.util.HashMap;
 import java.util.UUID;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Game {
     private final String id;
     private Integer correctNumber;

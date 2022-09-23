@@ -40,18 +40,18 @@ Current scope:     <a href="../../index.html">all classes</a>
   <td class="name">GameSocketHandler</td>
 <td class="coverageStat">
   <span class="percent">
-    91.7%
+    92.9%
   </span>
   <span class="absValue">
-    (11/12)
+    (13/14)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    91.9%
+    89.5%
   </span>
   <span class="absValue">
-    (57/62)
+    (68/76)
   </span>
 </td>
 </tr>
@@ -78,18 +78,18 @@ Current scope:     <a href="../../index.html">all classes</a>
   <td class="name"><strong>Total</strong></td>
 <td class="coverageStat">
   <span class="percent">
-    92.3%
+    93.3%
   </span>
   <span class="absValue">
-    (12/13)
+    (14/15)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    92.1%
+    89.6%
   </span>
   <span class="absValue">
-    (58/63)
+    (69/77)
   </span>
 </td>
 </tr>
@@ -106,6 +106,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;import com.yolointerview.yolotest.dtos.MessageDtoConverter;
 &nbsp;import com.yolointerview.yolotest.dtos.PlaceBetDto;
 &nbsp;import com.yolointerview.yolotest.entities.Game;
+&nbsp;import com.yolointerview.yolotest.entities.Player;
 &nbsp;import com.yolointerview.yolotest.enums.MessageType;
 &nbsp;import com.yolointerview.yolotest.service.GameService;
 &nbsp;import lombok.SneakyThrows;
@@ -153,6 +154,11 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;        // end the current game and start a new one after scheduled timeout
 <b class="fc">&nbsp;        long timeout = currentGame.getTimeout();</b>
 <b class="fc">&nbsp;        scheduledThreadPoolExecutor.schedule(this::endCurrentGame, timeout, TimeUnit.MILLISECONDS);</b>
+&nbsp;
+&nbsp;        // send new game to all active session and players
+<b class="fc">&nbsp;        MessageDto&lt;Game&gt; responseMessageDto = new MessageDto&lt;&gt;(NEW_GAME);</b>
+<b class="fc">&nbsp;        responseMessageDto.setData(currentGame);</b>
+<b class="fc">&nbsp;        sendMessageToAllSessions(responseMessageDto);</b>
 &nbsp;    }
 &nbsp;
 <b class="fc">&nbsp;    @SneakyThrows</b>
@@ -161,16 +167,13 @@ Current scope:     <a href="../../index.html">all classes</a>
 <b class="fc">&nbsp;        Game endedGame = gameService.endGame(id);</b>
 <b class="fc">&nbsp;        log.info(&quot;Ended Current Game {{}}&quot;, id);</b>
 &nbsp;
+&nbsp;        // send all players feedback about their bets
+<b class="fc">&nbsp;        sentIndividualActivePlayerFeedback(endedGame);</b>
+&nbsp;
 &nbsp;        // send concluded game to all active session and players
 <b class="fc">&nbsp;        MessageDto&lt;Game&gt; responseMessageDto = new MessageDto&lt;&gt;(TIMED_OUT);</b>
 <b class="fc">&nbsp;        responseMessageDto.setData(endedGame);</b>
-<b class="fc">&nbsp;        activeSessions.forEach((s, webSocketSession) -&gt; {</b>
-&nbsp;            try {
-<b class="fc">&nbsp;                webSocketSession.sendMessage(responseMessageDto.asTextMessage());</b>
-<b class="nc">&nbsp;            } catch (IOException e) {</b>
-<b class="nc">&nbsp;                log.error(&quot;Error sending message to Socket {} due to {}&quot;, webSocketSession.getId(), e.getMessage());</b>
-<b class="fc">&nbsp;            }</b>
-&nbsp;        });
+<b class="fc">&nbsp;        sendMessageToAllSessions(responseMessageDto);</b>
 &nbsp;
 &nbsp;        // start a new game (repeat the game process)
 <b class="fc">&nbsp;        startNewGame();</b>
@@ -208,7 +211,9 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;    }
 &nbsp;
 &nbsp;    private void sendResponseAfterPlacingBet(WebSocketSession session, String payload) throws IOException {
-<b class="fc">&nbsp;        log.info(&quot;Session{{}} is placing a Bet{} on Game{{}}&quot;, session.getId(), payload, currentGame.getId());</b>
+<b class="fc">&nbsp;        String sessionId = session.getId();</b>
+<b class="fc">&nbsp;        log.info(&quot;Session{{}} is placing a Bet{} on Game{{}}&quot;, sessionId, payload, currentGame.getId());</b>
+&nbsp;
 <b class="fc">&nbsp;        MessageDto&lt;PlaceBetDto&gt; placeBetDtoMessageDto = MessageDtoConverter</b>
 <b class="fc">&nbsp;                .convertToMessageDto(payload, PlaceBetDto.class);</b>
 <b class="fc">&nbsp;        PlaceBetDto placeBetDto = placeBetDtoMessageDto.getData();</b>
@@ -232,6 +237,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;        }
 &nbsp;
 &nbsp;        // place a bet on the current game
+<b class="fc">&nbsp;        placeBetDto.setSessionId(sessionId);</b>
 <b class="fc">&nbsp;        gameService.placeBet(placeBetDto);</b>
 &nbsp;
 &nbsp;        // send back response to client
@@ -249,6 +255,27 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;
 &nbsp;    public Game getCurrentGame() {
 <b class="fc">&nbsp;        return currentGame;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void sentIndividualActivePlayerFeedback(Game endedGame) throws IOException {
+<b class="fc">&nbsp;        for (Player player : endedGame.getPlayers().values()) {</b>
+<b class="fc">&nbsp;            WebSocketSession webSocketSession = activeSessions.get(player.getSessionId());</b>
+<b class="fc">&nbsp;            if (webSocketSession != null) {</b>
+<b class="nc">&nbsp;                MessageDto&lt;Player&gt; playerMessageDto = new MessageDto&lt;&gt;(BET_FEEDBACK);</b>
+<b class="nc">&nbsp;                playerMessageDto.setData(player);</b>
+<b class="nc">&nbsp;                webSocketSession.sendMessage(playerMessageDto.asTextMessage());</b>
+&nbsp;            }
+<b class="fc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void sendMessageToAllSessions(MessageDto&lt;?&gt; messageDto) {
+<b class="fc">&nbsp;        activeSessions.forEach((s, webSocketSession) -&gt; {</b>
+&nbsp;            try {
+<b class="fc">&nbsp;                webSocketSession.sendMessage(messageDto.asTextMessage());</b>
+<b class="nc">&nbsp;            } catch (IOException e) {</b>
+<b class="nc">&nbsp;                log.error(&quot;Error sending message to Socket {} due to {}&quot;, webSocketSession.getId(), e.getMessage());</b>
+<b class="fc">&nbsp;            }</b>
+&nbsp;        });
 &nbsp;    }
 &nbsp;}
 </code>
@@ -274,7 +301,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2022-09-23 00:59</div>
+    <div style="float:right;">generated on 2022-09-24 00:39</div>
 </div>
 </body>
 </html>

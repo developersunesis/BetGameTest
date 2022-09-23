@@ -204,7 +204,7 @@ class YoloTestApplicationTests {
             Game lastGame = null;
             for (TestClientWebSocket clientWebSocket : testClientWebSockets) {
                 ArrayList<TextMessage> messages = clientWebSocket.getMessages();
-                String lastPayload = messages.get(messages.size() - 1).getPayload();
+                String lastPayload = messages.get(messages.size() - 2).getPayload();
                 MessageDto<Game> lastMessageDto = MessageDtoConverter.convertToMessageDto(lastPayload, Game.class);
                 lastGame = lastMessageDto.getData();
                 assertEquals(TIMED_OUT, lastMessageDto.getType());
