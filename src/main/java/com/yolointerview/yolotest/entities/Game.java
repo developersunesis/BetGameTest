@@ -37,6 +37,10 @@ public class Game {
         return winningFactor;
     }
 
+    public Date getTimeoutAt() {
+        return new Date(createdAt.getTime() + timeout);
+    }
+
     public void setActive(boolean active) {
         this.active = active;
     }

@@ -102,7 +102,7 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public int generateRandomNumber() {
-        return new Random().nextInt(0, 10);
+        return new Random().nextInt(1, 10);
     }
 
     public ConcurrentHashMap<String, Game> getGames() {

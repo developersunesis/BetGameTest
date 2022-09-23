@@ -51,6 +51,11 @@ public class GameSocketHandler extends TextWebSocketHandler {
         // end the current game and start a new one after scheduled timeout
         long timeout = currentGame.getTimeout();
         scheduledThreadPoolExecutor.schedule(this::endCurrentGame, timeout, TimeUnit.MILLISECONDS);
+
+        // send new game to all active session and players
+        MessageDto<Game> responseMessageDto = new MessageDto<>(NEW_GAME);
+        responseMessageDto.setData(currentGame);
+        sendMessageToAllSessions(responseMessageDto);
     }
 
     @SneakyThrows
@@ -62,13 +67,7 @@ public class GameSocketHandler extends TextWebSocketHandler {
         // send concluded game to all active session and players
         MessageDto<Game> responseMessageDto = new MessageDto<>(TIMED_OUT);
         responseMessageDto.setData(endedGame);
-        activeSessions.forEach((s, webSocketSession) -> {
-            try {
-                webSocketSession.sendMessage(responseMessageDto.asTextMessage());
-            } catch (IOException e) {
-                log.error("Error sending message to Socket {} due to {}", webSocketSession.getId(), e.getMessage());
-            }
-        });
+        sendMessageToAllSessions(responseMessageDto);
 
         // start a new game (repeat the game process)
         startNewGame();
@@ -147,5 +146,15 @@ public class GameSocketHandler extends TextWebSocketHandler {
 
     public Game getCurrentGame() {
         return currentGame;
+    }
+
+    private void sendMessageToAllSessions(MessageDto<?> messageDto) {
+        activeSessions.forEach((s, webSocketSession) -> {
+            try {
+                webSocketSession.sendMessage(messageDto.asTextMessage());
+            } catch (IOException e) {
+                log.error("Error sending message to Socket {} due to {}", webSocketSession.getId(), e.getMessage());
+            }
+        });
     }
 }
