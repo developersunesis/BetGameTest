@@ -17,6 +17,7 @@ public class Player {
     private BigDecimal stakeAmount;
     private BigDecimal endOfGameBalance = BigDecimal.ZERO;
     private final Date createdAt;
+    private String sessionId;
 
     public Player() {
         this.id = UUID.randomUUID().toString();
@@ -31,6 +32,7 @@ public class Player {
         player.nickname = placeBetDto.getNickname();
         player.stakeAmount = placeBetDto.getStake();
         player.guessedNumber = placeBetDto.getNumber();
+        player.sessionId = placeBetDto.getSessionId();
         return player;
     }
 

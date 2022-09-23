@@ -4,6 +4,7 @@ import com.yolointerview.yolotest.dtos.MessageDto;
 import com.yolointerview.yolotest.dtos.MessageDtoConverter;
 import com.yolointerview.yolotest.dtos.PlaceBetDto;
 import com.yolointerview.yolotest.entities.Game;
+import com.yolointerview.yolotest.entities.Player;
 import com.yolointerview.yolotest.enums.MessageType;
 import com.yolointerview.yolotest.service.GameService;
 import lombok.SneakyThrows;
@@ -64,6 +65,9 @@ public class GameSocketHandler extends TextWebSocketHandler {
         Game endedGame = gameService.endGame(id);
         log.info("Ended Current Game {{}}", id);
 
+        // send all players feedback about their bets
+        sentIndividualActivePlayerFeedback(endedGame);
+
         // send concluded game to all active session and players
         MessageDto<Game> responseMessageDto = new MessageDto<>(TIMED_OUT);
         responseMessageDto.setData(endedGame);
@@ -105,7 +109,9 @@ public class GameSocketHandler extends TextWebSocketHandler {
     }
 
     private void sendResponseAfterPlacingBet(WebSocketSession session, String payload) throws IOException {
-        log.info("Session{{}} is placing a Bet{} on Game{{}}", session.getId(), payload, currentGame.getId());
+        String sessionId = session.getId();
+        log.info("Session{{}} is placing a Bet{} on Game{{}}", sessionId, payload, currentGame.getId());
+
         MessageDto<PlaceBetDto> placeBetDtoMessageDto = MessageDtoConverter
                 .convertToMessageDto(payload, PlaceBetDto.class);
         PlaceBetDto placeBetDto = placeBetDtoMessageDto.getData();
@@ -129,6 +135,7 @@ public class GameSocketHandler extends TextWebSocketHandler {
         }
 
         // place a bet on the current game
+        placeBetDto.setSessionId(sessionId);
         gameService.placeBet(placeBetDto);
 
         // send back response to client
@@ -146,6 +153,17 @@ public class GameSocketHandler extends TextWebSocketHandler {
 
     public Game getCurrentGame() {
         return currentGame;
+    }
+
+    private void sentIndividualActivePlayerFeedback(Game endedGame) throws IOException {
+        for (Player player : endedGame.getPlayers().values()) {
+            WebSocketSession webSocketSession = activeSessions.get(player.getSessionId());
+            if (webSocketSession != null) {
+                MessageDto<Player> playerMessageDto = new MessageDto<>(BET_FEEDBACK);
+                playerMessageDto.setData(player);
+                webSocketSession.sendMessage(playerMessageDto.asTextMessage());
+            }
+        }
     }
 
     private void sendMessageToAllSessions(MessageDto<?> messageDto) {

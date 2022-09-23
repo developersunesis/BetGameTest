@@ -16,4 +16,9 @@ public class PlaceBetDto {
     private String nickname;
     private Integer number;
     private BigDecimal stake;
+    private String sessionId;
+
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
+    }
 }
