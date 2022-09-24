@@ -32,7 +32,7 @@ that matches the number it generates.
 - Load the dependencies `./gradlew clean`
 - Run the application `./gradlew bootRun`
 
-The application runs on port `:8080` therefore, you can access its user interface on http://localhost:8080
+The application runs on port `:8080` therefore, you can access its user interface locally on http://localhost:8080
 
 ## Testing
 
