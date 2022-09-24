@@ -40,13 +40,11 @@ Unit and integration tests were added to the implementation with a coverage of o
 be found in the **reports** folder.
 
 #### Running Tests
-
 `./gradlew test`
 
 Tests take about 25s to complete
 
 ### Side Notes
-
 - The test case `fivePlayerSuccessfullyPlacesBetForActiveGameAndGotFeedback` can be a bottleneck due to its wait time
   and proper mocking can be done to improve this so that scheduling does not need to happen. Nevertheless, it provides
   a good process of simulate an actual game round at this point
