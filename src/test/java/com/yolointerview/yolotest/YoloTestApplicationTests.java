@@ -211,8 +211,11 @@ class YoloTestApplicationTests {
         // at the end of the game, alice is meant to be the standing winner
         when(gameService.generateRandomNumber()).thenReturn(1);
 
-        // use a schedule thread pool to wait for the game to end and check the last message sent to all
-        // client websocket
+        // run a schedule a bit after the game timed out
+        long scheduleCheckTimeout = game.getTimeout() + 1000;
+
+        // use a schedule thread pool to wait for the game to end
+        // and check the message sent to all client websocket
         ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1);
         scheduledThreadPoolExecutor.schedule(() -> {
             Game lastGame = null;
@@ -243,6 +246,6 @@ class YoloTestApplicationTests {
             BigDecimal expectedBalance = BigDecimal.valueOf(99).setScale(2, RoundingMode.UP);
             assertEquals("alice", player.getNickname());
             assertEquals(expectedBalance, player.getEndOfGameBalance());
-        }, currentGame.getTimeout(), TimeUnit.MILLISECONDS).get();
+        }, scheduleCheckTimeout, TimeUnit.MILLISECONDS).get();
     }
 }
