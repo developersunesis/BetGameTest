@@ -6,6 +6,8 @@ import com.yolointerview.yolotest.dtos.PlaceBetDto;
 import com.yolointerview.yolotest.entities.Game;
 import com.yolointerview.yolotest.entities.Player;
 import com.yolointerview.yolotest.enums.MessageType;
+import com.yolointerview.yolotest.exceptions.GameDoesNotExistException;
+import com.yolointerview.yolotest.exceptions.GameTimedOutException;
 import com.yolointerview.yolotest.service.GameService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -66,7 +68,7 @@ public class GameSocketHandler extends TextWebSocketHandler {
         log.info("Ended Current Game {{}}", id);
 
         // send all players feedback about their bets
-        sentIndividualActivePlayerFeedback(endedGame);
+        sendIndividualActivePlayerFeedback(endedGame);
 
         // send concluded game to all active session and players
         MessageDto<Game> responseMessageDto = new MessageDto<>(TIMED_OUT);
@@ -77,14 +79,23 @@ public class GameSocketHandler extends TextWebSocketHandler {
         startNewGame();
     }
 
+    public Game getCurrentGame() {
+        return currentGame;
+    }
+
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws IOException {
-        String payload = message.getPayload();
-        MessageType messageType = MessageDtoConverter.getMessageType(payload);
-        switch (messageType) {
-            case PING -> sendResponseToPing(session);
-            case PLACE_BET -> sendResponseAfterPlacingBet(session, payload);
-            default -> sendErrorResponse(session, "Unable to parse request type");
+        try {
+            String payload = message.getPayload();
+            MessageType messageType = MessageDtoConverter.getMessageType(payload);
+            switch (messageType) {
+                case PING -> sendResponseToPing(session);
+                case PLACE_BET -> sendResponseAfterPlacingBet(session, payload);
+                default -> sendErrorResponse(session, "Unable to parse request");
+            }
+        } catch (Exception exception) {
+            log.error(exception.getMessage());
+            sendErrorResponse(session, exception);
         }
     }
 
@@ -99,6 +110,11 @@ public class GameSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         // when a session is closed, remove the session from list of active sessions
         activeSessions.remove(session.getId());
+    }
+
+    @Override
+    public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
+        sendErrorResponse(session, "Error in communication");
     }
 
     private void sendResponseToPing(WebSocketSession session) throws IOException {
@@ -151,11 +167,17 @@ public class GameSocketHandler extends TextWebSocketHandler {
         session.sendMessage(responseMessageDto.asTextMessage());
     }
 
-    public Game getCurrentGame() {
-        return currentGame;
+    private void sendErrorResponse(WebSocketSession session, Exception exception) throws IOException {
+        if (exception instanceof GameTimedOutException) {
+            sendErrorResponse(session, "Requested game has ended");
+        } else if (exception instanceof GameDoesNotExistException) {
+            sendErrorResponse(session, "Requested game does not exist");
+        } else {
+            sendErrorResponse(session, "Unable to parse request");
+        }
     }
 
-    private void sentIndividualActivePlayerFeedback(Game endedGame) throws IOException {
+    private void sendIndividualActivePlayerFeedback(Game endedGame) throws IOException {
         for (Player player : endedGame.getPlayers().values()) {
             WebSocketSession webSocketSession = activeSessions.get(player.getSessionId());
             if (webSocketSession != null) {

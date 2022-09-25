@@ -21,6 +21,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -30,6 +31,7 @@ import static com.yolointerview.yolotest.enums.MessageType.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+// Integration Tests
 class YoloTestApplicationTests {
 
     private static final GameService gameService = spy(new GameServiceImpl());
@@ -78,11 +80,13 @@ class YoloTestApplicationTests {
         TestClientWebSocket testClientWebSocket = testClientWebSockets[0];
         TestClientWebSocket testClientWebSocket1 = testClientWebSockets[1];
         TestClientWebSocket testClientWebSocket2 = testClientWebSockets[2];
+        TestClientWebSocket testClientWebSocket3 = testClientWebSockets[3];
 
         // clear all client messages
         testClientWebSocket.clearMessages();
         testClientWebSocket1.clearMessages();
         testClientWebSocket2.clearMessages();
+        testClientWebSocket3.clearMessages();
 
         Game currentGame = gameSocketHandler.getCurrentGame();
         String gameId = currentGame.getId();
@@ -102,26 +106,36 @@ class YoloTestApplicationTests {
         PlaceBetDto placeBetDto2 = placeBetDto(gameId, null);
         messageDto2.setData(placeBetDto2);
 
+        // client D provided an invalid game id
+        MessageDto<PlaceBetDto> messageDto3 = new MessageDto<>(PLACE_BET);
+        PlaceBetDto placeBetDto3 = placeBetDto(UUID.randomUUID().toString(), BigDecimal.TEN);
+        messageDto3.setData(placeBetDto3);
+
         // all clients placed a bet
         gameSocketHandler.handleMessage(testClientWebSocket, messageDto.asTextMessage());
         gameSocketHandler.handleMessage(testClientWebSocket1, messageDto1.asTextMessage());
         gameSocketHandler.handleMessage(testClientWebSocket2, messageDto2.asTextMessage());
+        gameSocketHandler.handleMessage(testClientWebSocket3, messageDto3.asTextMessage());
 
         String payloadClientA = testClientWebSocket.getMessages().get(0).getPayload();
         String payloadClientB = testClientWebSocket1.getMessages().get(0).getPayload();
         String payloadClientC = testClientWebSocket2.getMessages().get(0).getPayload();
+        String payloadClientD = testClientWebSocket3.getMessages().get(0).getPayload();
 
         MessageDto<?> responseClientA = MessageDtoConverter.convertToMessageDto(payloadClientA);
         MessageDto<?> responseClientB = MessageDtoConverter.convertToMessageDto(payloadClientB);
         MessageDto<?> responseClientC = MessageDtoConverter.convertToMessageDto(payloadClientC);
+        MessageDto<?> responseClientD = MessageDtoConverter.convertToMessageDto(payloadClientD);
 
         assertEquals(ERROR, responseClientA.getType());
         assertEquals(ERROR, responseClientB.getType());
         assertEquals(ERROR, responseClientC.getType());
+        assertEquals(ERROR, responseClientD.getType());
 
         assertEquals("Please provide a nickname", responseClientA.getMessage());
         assertEquals("Please provide a valid number between 1 and 10", responseClientB.getMessage());
         assertEquals("Please specify your bet amount", responseClientC.getMessage());
+        assertEquals("Requested game does not exist", responseClientD.getMessage());
 
         // no player ends up in the game
         assertTrue(currentGame.getPlayers().isEmpty());

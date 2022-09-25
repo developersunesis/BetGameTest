@@ -32,7 +32,22 @@ that matches the number it generates.
 - Load the dependencies `./gradlew clean`
 - Run the application `./gradlew bootRun`
 
-The application runs on port `:8080` therefore, you can access its user interface locally on http://localhost:8080
+
+- The application runs on port `:8080` therefore, you can access its user interface locally on http://localhost:8080
+
+
+- The socket communication is handled by `GameSocketHandler` class and exposed under `/guessTheNumberGame` path.
+  Communication between the client and server follow the message format below
+
+#### Server/Client message format
+
+```
+{
+  "type": "PING",
+  "data": {...},
+  "message": null
+}
+```
 
 ## Testing
 
@@ -50,6 +65,7 @@ Tests take about 25s to complete
 - The test case `fivePlayerSuccessfullyPlacesBetForActiveGameAndGotFeedback` can be a bottleneck due to its wait time
   and proper mocking can be done to improve this so that scheduling does not need to happen. Nevertheless, it provides
   a good process of simulate an actual game round at this point
+- Handler class functionality can be separated from each function needed to send a message to clients
 - Currencies were not catered for in the betting process, this can be considered as an improvement
 - Improved security can be done, to ensure unauthorised access is restricted in communication with the service
 - Several improvements can be done for the UI/UX to ensure that the game process is easier from a customer's perspective
