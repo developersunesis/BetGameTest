@@ -58,7 +58,7 @@ be found in the **reports** folder.
 
 `./gradlew test`
 
-Tests take about 25s to complete
+Tests take about 12-25s to complete
 
 ### Side Notes
 
