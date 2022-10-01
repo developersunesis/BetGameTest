@@ -1,10 +1,10 @@
-package com.yolointerview.yolotest.service;
+package com.gameapp.test.service;
 
-import com.yolointerview.yolotest.dtos.PlaceBetDto;
-import com.yolointerview.yolotest.entities.Game;
-import com.yolointerview.yolotest.exceptions.DuplicateGameIdException;
-import com.yolointerview.yolotest.exceptions.GameDoesNotExistException;
-import com.yolointerview.yolotest.exceptions.GameTimedOutException;
+import com.gameapp.test.dtos.PlaceBetDto;
+import com.gameapp.test.entities.Game;
+import com.gameapp.test.exceptions.DuplicateGameIdException;
+import com.gameapp.test.exceptions.GameDoesNotExistException;
+import com.gameapp.test.exceptions.GameTimedOutException;
 
 import java.util.concurrent.ConcurrentHashMap;
 

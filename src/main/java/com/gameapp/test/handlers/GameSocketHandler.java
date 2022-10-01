@@ -1,14 +1,14 @@
-package com.yolointerview.yolotest.handlers;
+package com.gameapp.test.handlers;
 
-import com.yolointerview.yolotest.dtos.MessageDto;
-import com.yolointerview.yolotest.dtos.MessageDtoConverter;
-import com.yolointerview.yolotest.dtos.PlaceBetDto;
-import com.yolointerview.yolotest.entities.Game;
-import com.yolointerview.yolotest.entities.Player;
-import com.yolointerview.yolotest.enums.MessageType;
-import com.yolointerview.yolotest.exceptions.GameDoesNotExistException;
-import com.yolointerview.yolotest.exceptions.GameTimedOutException;
-import com.yolointerview.yolotest.service.GameService;
+import com.gameapp.test.dtos.MessageDto;
+import com.gameapp.test.dtos.MessageDtoConverter;
+import com.gameapp.test.dtos.PlaceBetDto;
+import com.gameapp.test.entities.Game;
+import com.gameapp.test.entities.Player;
+import com.gameapp.test.enums.MessageType;
+import com.gameapp.test.exceptions.GameDoesNotExistException;
+import com.gameapp.test.exceptions.GameTimedOutException;
+import com.gameapp.test.service.GameService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import static com.yolointerview.yolotest.enums.MessageType.*;
+import static com.gameapp.test.enums.MessageType.*;
 
 @Slf4j
 @Component

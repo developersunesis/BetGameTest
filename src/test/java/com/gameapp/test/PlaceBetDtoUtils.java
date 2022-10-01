@@ -1,6 +1,6 @@
-package com.yolointerview.yolotest;
+package com.gameapp.test;
 
-import com.yolointerview.yolotest.dtos.PlaceBetDto;
+import com.gameapp.test.dtos.PlaceBetDto;
 
 import java.math.BigDecimal;
 

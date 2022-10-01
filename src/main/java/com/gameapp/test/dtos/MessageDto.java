@@ -1,6 +1,6 @@
-package com.yolointerview.yolotest.dtos;
+package com.gameapp.test.dtos;
 
-import com.yolointerview.yolotest.enums.MessageType;
+import com.gameapp.test.enums.MessageType;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

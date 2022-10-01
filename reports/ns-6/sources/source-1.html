@@ -102,13 +102,13 @@ Current scope:     <a href="../../index.html">all classes</a>
 <pre>
 <code class="sourceCode" id="sourceCode">&nbsp;package com.yolointerview.yolotest.handlers;
 &nbsp;
-&nbsp;import com.yolointerview.yolotest.dtos.MessageDto;
-&nbsp;import com.yolointerview.yolotest.dtos.MessageDtoConverter;
-&nbsp;import com.yolointerview.yolotest.dtos.PlaceBetDto;
-&nbsp;import com.yolointerview.yolotest.entities.Game;
-&nbsp;import com.yolointerview.yolotest.entities.Player;
-&nbsp;import com.yolointerview.yolotest.enums.MessageType;
-&nbsp;import com.yolointerview.yolotest.service.GameService;
+&nbsp;import dtos.com.gameapp.test.MessageDto;
+&nbsp;import dtos.com.gameapp.test.MessageDtoConverter;
+&nbsp;import dtos.com.gameapp.test.PlaceBetDto;
+&nbsp;import entities.com.gameapp.test.Game;
+&nbsp;import entities.com.gameapp.test.Player;
+&nbsp;import enums.com.gameapp.test.MessageType;
+&nbsp;import service.com.gameapp.test.GameService;
 &nbsp;import lombok.SneakyThrows;
 &nbsp;import lombok.extern.slf4j.Slf4j;
 &nbsp;import org.springframework.stereotype.Component;
@@ -126,7 +126,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;import java.util.concurrent.ScheduledThreadPoolExecutor;
 &nbsp;import java.util.concurrent.TimeUnit;
 &nbsp;
-&nbsp;import static com.yolointerview.yolotest.enums.MessageType.*;
+&nbsp;import static enums.com.gameapp.test.MessageType.*;
 &nbsp;
 <b class="fc">&nbsp;@Slf4j</b>
 &nbsp;@Component

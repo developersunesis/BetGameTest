@@ -1,4 +1,4 @@
-package com.yolointerview.yolotest.exceptions;
+package com.gameapp.test.exceptions;
 
 public class GameTimedOutException extends Exception {
 }

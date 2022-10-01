@@ -1,13 +1,13 @@
-package com.yolointerview.yolotest;
+package com.gameapp.test;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class YoloTestApplication {
+public class AppTestApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(YoloTestApplication.class, args);
+        SpringApplication.run(AppTestApplication.class, args);
     }
 
 }

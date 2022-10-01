@@ -1,9 +1,9 @@
-package com.yolointerview.yolotest.dtos;
+package com.gameapp.test.dtos;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.yolointerview.yolotest.enums.MessageType;
+import com.gameapp.test.enums.MessageType;
 import lombok.SneakyThrows;
 
 public class MessageDtoConverter {

@@ -1,12 +1,12 @@
-package com.yolointerview.yolotest.service;
+package com.gameapp.test.service;
 
-import com.yolointerview.yolotest.dtos.PlaceBetDto;
-import com.yolointerview.yolotest.entities.Game;
-import com.yolointerview.yolotest.entities.Player;
-import com.yolointerview.yolotest.enums.StakeStatus;
-import com.yolointerview.yolotest.exceptions.DuplicateGameIdException;
-import com.yolointerview.yolotest.exceptions.GameDoesNotExistException;
-import com.yolointerview.yolotest.exceptions.GameTimedOutException;
+import com.gameapp.test.dtos.PlaceBetDto;
+import com.gameapp.test.entities.Game;
+import com.gameapp.test.entities.Player;
+import com.gameapp.test.enums.StakeStatus;
+import com.gameapp.test.exceptions.DuplicateGameIdException;
+import com.gameapp.test.exceptions.GameDoesNotExistException;
+import com.gameapp.test.exceptions.GameTimedOutException;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 

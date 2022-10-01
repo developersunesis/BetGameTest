@@ -1,6 +1,6 @@
-package com.yolointerview.yolotest;
+package com.gameapp.test;
 
-import com.yolointerview.yolotest.handlers.GameSocketHandler;
+import com.gameapp.test.handlers.GameSocketHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;

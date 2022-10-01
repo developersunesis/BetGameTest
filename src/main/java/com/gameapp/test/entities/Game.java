@@ -1,4 +1,4 @@
-package com.yolointerview.yolotest.entities;
+package com.gameapp.test.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;

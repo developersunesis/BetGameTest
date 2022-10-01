@@ -1,4 +1,4 @@
-package com.yolointerview.yolotest.dtos;
+package com.gameapp.test.dtos;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

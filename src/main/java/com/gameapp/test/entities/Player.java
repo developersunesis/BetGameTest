@@ -1,7 +1,7 @@
-package com.yolointerview.yolotest.entities;
+package com.gameapp.test.entities;
 
-import com.yolointerview.yolotest.dtos.PlaceBetDto;
-import com.yolointerview.yolotest.enums.StakeStatus;
+import com.gameapp.test.dtos.PlaceBetDto;
+import com.gameapp.test.enums.StakeStatus;
 import lombok.Getter;
 
 import java.math.BigDecimal;

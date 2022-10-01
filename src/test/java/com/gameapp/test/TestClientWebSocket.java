@@ -1,4 +1,4 @@
-package com.yolointerview.yolotest;
+package com.gameapp.test;
 
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketMessage;
